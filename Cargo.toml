@@ -1,0 +1,9 @@
+[package]
+name = "challenge-2015"
+version = "0.1.0"
+authors = ["Rahul AG <r@hul.ag>"]
+
+[dependencies]
+bufstream = "0.1.1"
+rand = "0.3.11"
+time = "0.1.32"
