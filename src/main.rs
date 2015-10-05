@@ -5,7 +5,6 @@ extern crate time;
 use std::cmp::Ordering;
 use std::env;
 use std::fs::File;
-use std::io;
 use std::io::{Write, BufRead, BufReader};
 use std::net::{TcpListener, TcpStream};
 use std::path::Path;
@@ -16,14 +15,11 @@ use bufstream::BufStream;
 use rand::Rng;
 
 /// Attempt to write to a `TcpStream` and flush it
-///
-/// # Failures
-///
-/// Returns an Err if any errors occur during writing and flushing
-fn send_line(stream: &mut BufStream<TcpStream>, message: &str) -> Result<(), io::Error> {
-    try!(stream.write(format!("{}\n", message).as_bytes()));
-    try!(stream.flush());
-    Ok(())
+macro_rules! send_line {
+    ($stream:ident, $message:expr) => (
+        let _ = $stream.write(format!("{}\n", $message).as_bytes()).unwrap();
+        $stream.flush().unwrap();
+    );
 }
 
 /// Handles a single connection
@@ -39,7 +35,7 @@ fn handle_client(stream: TcpStream, words: Arc<Vec<String>>) {
     let mut stream = BufStream::new(stream);
 
     // We want a trivial way to identify winners
-    send_line(&mut stream, "TWITTER HANDLE PLZ").unwrap();
+    send_line!(stream, "TWITTER HANDLE PLZ");
 
     let mut handle = String::new();
     stream.read_line(&mut handle).unwrap();
@@ -51,7 +47,7 @@ fn handle_client(stream: TcpStream, words: Arc<Vec<String>>) {
     println!("[{} | {}] WORD {}", remote, handle, my_word);
 
     let begin_msg = format!("HELLO {}; BEGIN GUESSING THE WORD", handle);
-    send_line(&mut stream, &begin_msg[..]).unwrap();
+    send_line!(stream, &begin_msg[..]);
 
     let start_time = time::precise_time_s();
 
@@ -73,7 +69,7 @@ fn handle_client(stream: TcpStream, words: Arc<Vec<String>>) {
                 "="
             }
         };
-        send_line(&mut stream, output).unwrap();
+        send_line!(stream, output);
 
         if success {
             break;
